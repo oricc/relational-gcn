@@ -70,7 +70,7 @@ train_mask = sample_mask(idx_train, y.shape[0])
 
 num_nodes = A[0].shape[0]
 support = len(A)
-
+print('support =', support)
 # Define empty dummy feature matrix (input is ignored as we set featureless=True)
 # In case features are available, define them here and set featureless=False.
 X = sp.csr_matrix(A[0].shape)
@@ -84,7 +84,9 @@ for i in range(len(A)):
     A[i] = D_inv.dot(A[i]).tocsr()
 
 A_in = [InputAdj(sparse=True) for _ in range(support)]
+# A_in = [InputAdj(sparse=True) for _ in range(support)]
 X_in = Input(shape=(X.shape[1],), sparse=True)
+# X_in = Input(shape=(X.shape[1],), sparse=True)
 
 # Define model architecture
 H = GraphConvolution(HIDDEN, support, num_bases=BASES, featureless=True,
@@ -95,7 +97,7 @@ Y = GraphConvolution(y_train.shape[1], support, num_bases=BASES,
                      activation='softmax')([H] + A_in)
 
 # Compile model
-model = Model(input=[X_in] + A_in, output=Y)
+model = Model(inputs=[X_in] + A_in, output=Y)
 model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=LR))
 
 preds = None

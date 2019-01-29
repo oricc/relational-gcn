@@ -1,17 +1,21 @@
 from __future__ import print_function
+import os
+import sys
+
+sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('..'))
+sys.path.append(os.path.abspath('../..'))
 
 from rgcn.data_utils import load_data
 from rgcn.utils import *
 
 import pickle as pkl
 
-import os
-import sys
 import time
 import argparse
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--dataset", type=str, default="aifb",
+ap.add_argument("-d", "--dataset", type=str, default="am",
                 help="Dataset string ('aifb', 'mutag', 'bgs', 'am')")
 
 args = vars(ap.parse_args())
@@ -27,8 +31,8 @@ NUM_GC_LAYERS = 2  # Number of graph convolutional layers
 A, X, y, labeled_nodes_idx, train_idx, test_idx, rel_dict, train_names, test_names = load_data(
     DATASET)
 
-rel_list = range(len(A))
-for key, value in rel_dict.iteritems():
+rel_list = list(range(len(A)))
+for key, value in rel_dict.items():
     if value * 2 >= len(A):
         continue
     rel_list[value * 2] = key
@@ -48,7 +52,7 @@ t = time.time()
 bfs_generator = bfs_relational(A, labeled_nodes_idx)
 lvls = list()
 lvls.append(set(labeled_nodes_idx))
-lvls.append(set.union(*bfs_generator.next()))
+lvls.append(set.union(*next(bfs_generator)))
 print("Done! Elapsed time " + str(time.time() - t))
 
 # Delete unnecessary rows in adjacencies for memory efficiency

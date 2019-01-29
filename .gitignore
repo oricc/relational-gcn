@@ -101,3 +101,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# numpy
+*.npz
+*.npy
+*.gz
+*.pkl

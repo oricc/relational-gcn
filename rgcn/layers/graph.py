@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-from keras import activations, initializations
+from keras import activations
+from keras import initializers as initializations
 from keras import regularizers
 from keras.engine import Layer
 from keras.layers import Dropout
@@ -36,9 +37,9 @@ class GraphConvolution(Layer):
         self.b = None
         self.num_nodes = None
 
-        super(GraphConvolution, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
-    def get_output_shape_for(self, input_shapes):
+    def compute_output_shape(self, input_shapes):
         features_shape = input_shapes[0]
         output_shape = (features_shape[0], self.output_dim)
         return output_shape  # (batch_size, output_dim)
@@ -83,7 +84,7 @@ class GraphConvolution(Layer):
         A = inputs[1:]  # list of basis functions
 
         # convolve
-        supports = list()
+        supports = []
         for i in range(self.support):
             if not self.featureless:
                 supports.append(K.dot(A[i], features))
@@ -96,7 +97,7 @@ class GraphConvolution(Layer):
                                (self.num_bases, self.input_dim, self.output_dim))
             self.W = K.permute_dimensions(self.W, (1, 0, 2))
             V = K.dot(self.W_comp, self.W)
-            V = K.reshape(V, (self.support*self.input_dim, self.output_dim))
+            V = K.reshape(V, (self.support * self.input_dim, self.output_dim))
             output = K.dot(supports, V)
         else:
             output = K.dot(supports, self.W)
@@ -106,7 +107,7 @@ class GraphConvolution(Layer):
         if self.featureless:
             tmp = K.ones(self.num_nodes)
             tmp_do = Dropout(self.dropout)(tmp)
-            output = (output.T * tmp_do).T
+            output = K.transpose(K.transpose(output) * tmp_do)
 
         if self.bias:
             output += self.b
@@ -123,3 +124,4 @@ class GraphConvolution(Layer):
                   'input_dim': self.input_dim}
         base_config = super(GraphConvolution, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
