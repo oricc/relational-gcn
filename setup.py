@@ -12,7 +12,8 @@ setup(name='rgcn',
                         'rdflib',
                         'scipy',
                         'pandas',
-                        'wget'
+                        'wget',
+                        'tensorflow'
                         ],
       extras_require={
           'model_saving': ['h5py'],

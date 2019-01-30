@@ -1,4 +1,6 @@
-from keras.engine.topology import Node, InputLayer
+import tensorflow as tf
+from keras.engine.base_layer import Node
+from keras.layers import InputLayer
 import keras.backend as K
 
 
@@ -82,11 +84,11 @@ class InputLayerAdj(InputLayer):
              node_indices=[],
              tensor_indices=[],
              input_tensors=[input_tensor],
-             output_tensors=[input_tensor],
-             input_masks=[None],
-             output_masks=[None],
-             input_shapes=[batch_input_shape],
-             output_shapes=[batch_input_shape])
+             output_tensors=[input_tensor])
+        # input_masks=[None],
+        # output_masks=[None],
+        # input_shapes=[batch_input_shape],
+        # output_shapes=[batch_input_shape])
 
     def get_config(self):
         config = {'batch_input_shape': self.batch_input_shape,

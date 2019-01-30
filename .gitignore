@@ -102,8 +102,9 @@ ENV/
 # mypy
 .mypy_cache/
 
-# numpy
+# Other
 *.npz
 *.npy
 *.gz
 *.pkl
+*.pickle

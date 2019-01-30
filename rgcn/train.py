@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+import tensorflow as tf
 from keras.layers import Input, Dropout
 from keras.models import Model
 from keras.optimizers import Adam
