@@ -2,12 +2,14 @@ from __future__ import print_function
 import tensorflow as tf
 from keras.layers import Input, Dropout
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.regularizers import l2
 
 from rgcn.layers.graph import GraphConvolution
 from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
+
+from rgcn.RGCNModels import BasicRGCN
 
 import pickle as pkl
 
@@ -42,98 +44,110 @@ ap.set_defaults(validation=True)
 args = vars(ap.parse_args())
 print(args)
 
-# Define parameters
-DATASET = args['dataset']
-NB_EPOCH = args['epochs']
-VALIDATION = args['validation']
-LR = args['learnrate']
-L2 = args['l2norm']
-HIDDEN = args['hidden']
-BASES = args['bases']
-DO = args['dropout']
 
-dirname = os.path.dirname(os.path.realpath(sys.argv[0]))
+def train_inline():
+    # Define parameters
+    DATASET = args['dataset']
+    NB_EPOCH = args['epochs']
+    VALIDATION = args['validation']
+    LR = args['learnrate']
+    L2 = args['l2norm']
+    HIDDEN = args['hidden']
+    BASES = args['bases']
+    DO = args['dropout']
 
-with open(dirname + '/' + DATASET + '.pickle', 'rb') as f:
-    data = pkl.load(f)
+    dirname = os.path.dirname(os.path.realpath(sys.argv[0]))
 
-A = data['A']
-y = data['y']
-train_idx = data['train_idx']
-test_idx = data['test_idx']
+    with open(dirname + '/' + DATASET + '.pickle', 'rb') as f:
+        data = pkl.load(f)
 
-# Get dataset splits
-y_train, y_val, y_test, idx_train, idx_val, idx_test = get_splits(y, train_idx,
-                                                                  test_idx,
-                                                                  VALIDATION)
-train_mask = sample_mask(idx_train, y.shape[0])
+    A = data['A']
+    y = data['y']
+    train_idx = data['train_idx']
+    test_idx = data['test_idx']
 
-num_nodes = A[0].shape[0]
-support = len(A)
-print('support =', support)
-# Define empty dummy feature matrix (input is ignored as we set featureless=True)
-# In case features are available, define them here and set featureless=False.
-X = sp.csr_matrix(A[0].shape)
+    # Get dataset splits
+    y_train, y_val, y_test, idx_train, idx_val, idx_test = get_splits(y, train_idx,
+                                                                      test_idx,
+                                                                      VALIDATION)
+    train_mask = sample_mask(idx_train, y.shape[0])
 
-# Normalize adjacency matrices individually
-for i in range(len(A)):
-    d = np.array(A[i].sum(1)).flatten()
-    d_inv = 1. / d
-    d_inv[np.isinf(d_inv)] = 0.
-    D_inv = sp.diags(d_inv)
-    A[i] = D_inv.dot(A[i]).tocsr()
+    num_nodes = A[0].shape[0]
+    support = len(A)
+    print('support =', support)
+    # Define empty dummy feature matrix (input is ignored as we set featureless=True)
+    # In case features are available, define them here and set featureless=False.
+    X = sp.csr_matrix(A[0].shape)
 
-A_in = [InputAdj(sparse=True) for _ in range(support)]
-# A_in = [InputAdj(sparse=True) for _ in range(support)]
-X_in = Input(shape=(X.shape[1],), sparse=True)
-# X_in = Input(shape=(X.shape[1],), sparse=True)
+    # Normalize adjacency matrices individually
+    for i in range(len(A)):
+        d = np.array(A[i].sum(1)).flatten()
+        d_inv = 1. / d
+        d_inv[np.isinf(d_inv)] = 0.
+        D_inv = sp.diags(d_inv)
+        A[i] = D_inv.dot(A[i]).tocsr()
 
-# Define model architecture
-H = GraphConvolution(HIDDEN, support, num_bases=BASES, featureless=True,
-                     activation='relu',
-                     W_regularizer=l2(L2))([X_in] + A_in)
-H = Dropout(DO)(H)
-Y = GraphConvolution(y_train.shape[1], support, num_bases=BASES,
-                     activation='softmax')([H] + A_in)
+    A_in = [InputAdj(sparse=True) for _ in range(support)]
+    # A_in = [InputAdj(sparse=True) for _ in range(support)]
+    X_in = Input(shape=(X.shape[1],), sparse=True)
+    # X_in = Input(shape=(X.shape[1],), sparse=True)
 
-# Compile model
-model = Model(inputs=[X_in] + A_in, output=Y)
-model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=LR))
+    # Define model architecture
+    H = GraphConvolution(HIDDEN, support, num_bases=BASES, featureless=True,
+                         activation='relu',
+                         W_regularizer=l2(L2))([X_in] + A_in)
+    H = Dropout(DO)(H)
+    Y = GraphConvolution(y_train.shape[1], support, num_bases=BASES,
+                         activation='softmax')([H] + A_in)
 
-preds = None
+    # Compile model
+    model = Model(inputs=[X_in] + A_in, output=Y)
+    model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=LR, momentum=0.99))
+    # model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=LR))
 
-# Fit
-for epoch in range(1, NB_EPOCH + 1):
+    preds = None
 
-    # Log wall-clock time
-    t = time.time()
+    # Fit
+    for epoch in range(1, NB_EPOCH + 1):
 
-    # Single training iteration
-    model.fit([X] + A, y_train, sample_weight=train_mask,
-              batch_size=num_nodes, nb_epoch=1, shuffle=False, verbose=0)
+        # Log wall-clock time
+        t = time.time()
 
-    if epoch % 1 == 0:
+        # Single training iteration
+        model.fit([X] + A, y_train, sample_weight=train_mask,
+                  batch_size=num_nodes, epoch=1, shuffle=False, verbose=0)
 
-        # Predict on full dataset
-        preds = model.predict([X] + A, batch_size=num_nodes)
+        if epoch % 1 == 0:
 
-        # Train / validation scores
-        train_val_loss, train_val_acc = evaluate_preds(preds, [y_train, y_val],
-                                                       [idx_train, idx_val])
+            # Predict on full dataset
+            preds = model.predict([X] + A, batch_size=num_nodes)
 
-        print("Epoch: {:04d}".format(epoch),
-              "train_loss= {:.4f}".format(train_val_loss[0]),
-              "train_acc= {:.4f}".format(train_val_acc[0]),
-              "val_loss= {:.4f}".format(train_val_loss[1]),
-              "val_acc= {:.4f}".format(train_val_acc[1]),
-              "time= {:.4f}".format(time.time() - t))
+            # Train / validation scores
+            train_val_loss, train_val_acc = evaluate_preds(preds, [y_train, y_val],
+                                                           [idx_train, idx_val])
 
-    else:
-        print("Epoch: {:04d}".format(epoch),
-              "time= {:.4f}".format(time.time() - t))
+            print("Epoch: {:04d}".format(epoch),
+                  "train_loss= {:.4f}".format(train_val_loss[0]),
+                  "train_acc= {:.4f}".format(train_val_acc[0]),
+                  "val_loss= {:.4f}".format(train_val_loss[1]),
+                  "val_acc= {:.4f}".format(train_val_acc[1]),
+                  "time= {:.4f}".format(time.time() - t))
 
-# Testing
-test_loss, test_acc = evaluate_preds(preds, [y_test], [idx_test])
-print("Test set results:",
-      "loss= {:.4f}".format(test_loss[0]),
-      "accuracy= {:.4f}".format(test_acc[0]))
+        else:
+            print("Epoch: {:04d}".format(epoch),
+                  "time= {:.4f}".format(time.time() - t))
+
+    # Testing
+    test_loss, test_acc = evaluate_preds(preds, [y_test], [idx_test])
+    print("Test set results:",
+          "loss= {:.4f}".format(test_loss[0]),
+          "accuracy= {:.4f}".format(test_acc[0]))
+
+
+def train_model_object():
+    m = BasicRGCN(args)
+    m.train()
+
+
+if __name__ == '__main__':
+    train_model_object()
