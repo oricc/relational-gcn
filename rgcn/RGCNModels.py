@@ -5,7 +5,7 @@ import sys
 import pickle as pkl
 import time
 import tensorflow as tf
-from keras.layers import Input, Dropout
+from keras.layers import Input, Dropout, Dense
 from keras.models import Model
 from keras.optimizers import Adam, SGD
 from keras.regularizers import l2
@@ -134,6 +134,8 @@ class BasicRGCN(RGCNModel):
         H = Dropout(self.DO)(H)
         Y = GraphConvolution(self.train_labels.shape[1], self.support, num_bases=self.BASES,
                              activation='softmax')([H] + A_in)
+        # H = Dropout(self.DO)(H)
+        # Y = Dense(self.train_labels.shape[1], activation='softmax', kernel_regularizer=l2(self.L2))(H)
 
         # Compile model
         model = Model(inputs=[X_in] + A_in, outputs=Y)
@@ -144,6 +146,7 @@ class BasicRGCN(RGCNModel):
 
     def train(self):
         # Fit
+        preds = None
         for epoch in range(1, self.NB_EPOCH + 1):
 
             # Log wall-clock time
@@ -153,7 +156,6 @@ class BasicRGCN(RGCNModel):
             self.model.fit([self.X] + self.A, self.train_labels, sample_weight=self.train_mask,
                            batch_size=self.num_nodes, epochs=1, shuffle=False, verbose=0)
 
-            preds = None
             if epoch % 1 == 0:
 
                 # Predict on full dataset
@@ -174,8 +176,16 @@ class BasicRGCN(RGCNModel):
                 print("Epoch: {:04d}".format(epoch),
                       "time= {:.4f}".format(time.time() - t))
 
-            # Testing
-            test_loss, test_acc = evaluate_preds(preds, [self.test_labels], [self.idx_test])
-            print("Test set results:",
-                  "loss= {:.4f}".format(test_loss[0]),
-                  "accuracy= {:.4f}".format(test_acc[0]))
+        # Testing
+        test_loss, test_acc = evaluate_preds(preds, [self.test_labels], [self.idx_test])
+        print("Test set results:",
+              "loss= {:.4f}".format(test_loss[0]),
+              "accuracy= {:.4f}".format(test_acc[0]))
+
+
+class RGCNWithNeighborLabelsAsInput(BasicRGCN):
+    def __init__(self):
+        pass
+
+    def _get_data(self):
+        pass

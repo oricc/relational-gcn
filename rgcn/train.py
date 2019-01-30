@@ -1,5 +1,6 @@
 from __future__ import print_function
 import tensorflow as tf
+
 from keras.layers import Input, Dropout
 from keras.models import Model
 from keras.optimizers import Adam, SGD
@@ -17,6 +18,8 @@ import os
 import sys
 import time
 import argparse
+
+from graph_measures.features_algorithms.vertices.neighbor_nodes_histogram import NthNeighborNodeHistogramCalculator
 
 np.random.seed()
 
