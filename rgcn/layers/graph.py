@@ -125,3 +125,6 @@ class GraphConvolution(Layer):
         base_config = super(GraphConvolution, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
+class AsymmetricGraphConvolution(GraphConvolution):
+    pass

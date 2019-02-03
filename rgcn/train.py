@@ -1,16 +1,15 @@
 from __future__ import print_function
-import tensorflow as tf
 
 from keras.layers import Input, Dropout
 from keras.models import Model
-from keras.optimizers import Adam, SGD
+from keras.optimizers import SGD
 from keras.regularizers import l2
 
 from rgcn.layers.graph import GraphConvolution
 from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
-from rgcn.RGCNModels import BasicRGCN
+from rgcn.models.BaseRGCN import BasicRGCN
 
 import pickle as pkl
 
@@ -18,8 +17,6 @@ import os
 import sys
 import time
 import argparse
-
-from graph_measures.features_algorithms.vertices.neighbor_nodes_histogram import NthNeighborNodeHistogramCalculator
 
 np.random.seed()
 

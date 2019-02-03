@@ -88,7 +88,7 @@ class BasicRGCN(RGCNModel):
 
     def _get_data(self):
 
-        with open(self.dirname + '/' + self.DATASET + '.pickle', 'rb') as f:
+        with open(self.dirname + '/data/' + self.DATASET + '.pickle', 'rb') as f:
             data = pkl.load(f)
 
         A = data['A']

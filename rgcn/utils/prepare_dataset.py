@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath('.'))
 sys.path.append(os.path.abspath('..'))
 sys.path.append(os.path.abspath('../..'))
 
-from rgcn.data_utils import load_data
+from rgcn.utils.data_utils import load_data
 from rgcn.utils import *
 
 import pickle as pkl
