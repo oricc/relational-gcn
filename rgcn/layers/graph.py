@@ -7,6 +7,7 @@ from keras.engine import Layer
 from keras.layers import Dropout
 
 import keras.backend as K
+import tensorflow as tf
 
 
 class GraphConvolution(Layer):
@@ -127,4 +128,83 @@ class GraphConvolution(Layer):
 
 
 class AsymmetricGraphConvolution(GraphConvolution):
-    pass
+    def __init__(self, output_dim, support=1, featureless=False,
+                 init='glorot_uniform', activation='linear',
+                 weights=None, W_regularizer=None, num_bases=-1,
+                 b_regularizer=None, bias=False, dropout=0., **kwargs):
+        super(AsymmetricGraphConvolution, self).__init__(output_dim, support, featureless,
+                                                         init, activation,
+                                                         weights, W_regularizer, num_bases,
+                                                         b_regularizer, bias, dropout, **kwargs)
+
+    def build(self, input_shapes):
+        features_shape = input_shapes[0]
+        if self.featureless:
+            self.num_nodes = features_shape[1]  # NOTE: Assumes featureless input (i.e. square identity mx)
+        assert len(features_shape) == 2
+        self.input_dim = features_shape[1]
+
+        if self.num_bases > 0:
+            self.W = K.concatenate([self.add_weight((2 * self.input_dim, self.output_dim),
+                                                    initializer=self.init,
+                                                    name='{}_W'.format(self.name),
+                                                    regularizer=self.W_regularizer) for _ in range(self.num_bases)],
+                                   axis=0)
+
+            self.W_comp = self.add_weight((self.support, self.num_bases),
+                                          initializer=self.init,
+                                          name='{}_W_comp'.format(self.name),
+                                          regularizer=self.W_regularizer)
+        else:
+            self.W = K.concatenate([self.add_weight((2 * self.input_dim, self.output_dim),
+                                                    # CHANGE 1 - double the input size for the weight
+                                                    initializer=self.init,
+                                                    name='{}_W'.format(self.name),
+                                                    regularizer=self.W_regularizer) for _ in range(self.support)],
+                                   axis=0)
+
+        if self.bias:
+            self.b = self.add_weight((self.output_dim,),
+                                     initializer='zero',
+                                     name='{}_b'.format(self.name),
+                                     regularizer=self.b_regularizer)
+
+        if self.initial_weights is not None:
+            self.set_weights(self.initial_weights)
+            del self.initial_weights
+
+    def call(self, inputs, mask=None):
+        features = inputs[0]
+        A = inputs[1:]  # list of basis functions
+
+        # convolve
+        supports = []
+        for i in range(self.support):
+            if not self.featureless:
+                supports.append(K.dot(A[i], features))
+                supports[i] = K.concatenate(tf.split(supports[i], 2, axis=0), axis=1)
+                # CHANGE 2 - block transpose the adj matrices so that dimentions match
+            else:
+                supports.append(A[i])
+        supports = K.concatenate(supports, axis=1)
+
+        if self.num_bases > 0:
+            self.W = K.reshape(self.W,
+                               (self.num_bases, self.input_dim, self.output_dim))
+            self.W = K.permute_dimensions(self.W, (1, 0, 2))
+            V = K.dot(self.W_comp, self.W)
+            V = K.reshape(V, (self.support * self.input_dim, self.output_dim))
+            output = K.dot(supports, V)
+        else:
+            output = K.dot(supports, self.W)
+
+        # if featureless add dropout to output, by elementwise multiplying with column vector of ones,
+        # with dropout applied to the vector of ones.
+        if self.featureless:
+            tmp = K.ones(self.num_nodes)
+            tmp_do = Dropout(self.dropout)(tmp)
+            output = K.transpose(K.transpose(output) * tmp_do)
+
+        if self.bias:
+            output += self.b
+        return self.activation(output)
