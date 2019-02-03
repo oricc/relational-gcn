@@ -98,7 +98,7 @@ def load_data(dataset_str='aifb', limit=-1):
 
     print('Loading dataset', dataset_str)
 
-    dirname = os.path.dirname(os.path.realpath(sys.argv[0]))
+    dirname = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
 
     if dataset_str == 'am':
         data_url = 'https://www.dropbox.com/s/htisydfgwxmrx65/am_stripped.nt.gz?dl=1'
