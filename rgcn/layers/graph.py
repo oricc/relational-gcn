@@ -145,7 +145,7 @@ class AsymmetricGraphConvolution(GraphConvolution):
         self.input_dim = features_shape[1]
 
         if self.num_bases > 0:
-            self.W = K.concatenate([self.add_weight((2 * self.input_dim, self.output_dim),
+            self.W = K.concatenate([self.add_weight((self.input_dim, self.output_dim),
                                                     initializer=self.init,
                                                     name='{}_W'.format(self.name),
                                                     regularizer=self.W_regularizer) for _ in range(self.num_bases)],
@@ -156,7 +156,7 @@ class AsymmetricGraphConvolution(GraphConvolution):
                                           name='{}_W_comp'.format(self.name),
                                           regularizer=self.W_regularizer)
         else:
-            self.W = K.concatenate([self.add_weight((2 * self.input_dim, self.output_dim),
+            self.W = K.concatenate([self.add_weight((self.input_dim, self.output_dim),
                                                     # CHANGE 1 - double the input size for the weight
                                                     initializer=self.init,
                                                     name='{}_W'.format(self.name),
@@ -182,12 +182,14 @@ class AsymmetricGraphConvolution(GraphConvolution):
         for i in range(self.support):
             if not self.featureless:
                 supports.append(K.dot(A[i], features))
-                supports[i] = K.concatenate(tf.split(supports[i], 2, axis=0), axis=1)
+                # supports[i] = K.concatenate(tf.split(supports[i], 2, axis=0), axis=1)
                 # CHANGE 2 - block transpose the adj matrices so that dimentions match
             else:
                 supports.append(A[i])
+        print(len(supports))
         supports = K.concatenate(supports, axis=1)
-
+        print(supports.shape)
+        print(self.W.shape)
         if self.num_bases > 0:
             self.W = K.reshape(self.W,
                                (self.num_bases, self.input_dim, self.output_dim))

@@ -83,8 +83,22 @@ class BasicRGCN(RGCNModel):
         self.train_mask = None
         self.num_nodes = None
         self.support = None
+        self._normalizing_function = self.__symmetric_normalization
+
+        self.featureless = True
 
         super().__init__()
+
+    def __symmetric_normalization(self):
+
+        A = self.A
+        # Normalize adjacency matrices individually
+        for i in range(len(A)):
+            d = np.array(A[i].sum(1)).flatten()
+            d_inv = 1. / d
+            d_inv[np.isinf(d_inv)] = 0.
+            D_inv = sp.diags(d_inv)
+            A[i] = D_inv.dot(A[i]).tocsr()
 
     def _get_data(self):
 
@@ -110,15 +124,9 @@ class BasicRGCN(RGCNModel):
         # In case features are available, define them here and set featureless=False.
         self.X = sp.csr_matrix(A[0].shape)
 
-        # Normalize adjacency matrices individually
-        for i in range(len(A)):
-            d = np.array(A[i].sum(1)).flatten()
-            d_inv = 1. / d
-            d_inv[np.isinf(d_inv)] = 0.
-            D_inv = sp.diags(d_inv)
-            A[i] = D_inv.dot(A[i]).tocsr()
-
         self.A = A
+
+        self._normalizing_function()
 
     def _build_model(self):
 

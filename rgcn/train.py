@@ -10,6 +10,7 @@ from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
 from rgcn.models.BaseRGCN import BasicRGCN
+from rgcn.models.ASymmetricRGCN import ASymmetricRGCN,AsymmetricRGCNWithNeighborHistograms
 
 import pickle as pkl
 
@@ -145,7 +146,9 @@ def train_inline():
 
 
 def train_model_object():
-    m = BasicRGCN(args)
+    # m = BasicRGCN(args)
+    # m = ASymmetricRGCN(args)
+    m = AsymmetricRGCNWithNeighborHistograms(args)
     m.train()
 
 

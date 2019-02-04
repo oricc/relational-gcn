@@ -61,16 +61,16 @@ Here they do some monkey business with the adj matrices.
 
 t = time.time()
 # Get level sets (used for memory optimization)
-bfs_generator = bfs_relational(A, labeled_nodes_idx)
-lvls = list()
-lvls.append(set(labeled_nodes_idx))
-lvls.append(set.union(*next(bfs_generator)))
-print("Done! Elapsed time " + str(time.time() - t))
-
-# Delete unnecessary rows in adjacencies for memory efficiency
-todel = list(set(range(num_nodes)) - set.union(lvls[0], lvls[1]))
-for i in range(len(A)):
-    csr_zero_rows(A[i], todel)
+# bfs_generator = bfs_relational(A, labeled_nodes_idx)
+# lvls = list()
+# lvls.append(set(labeled_nodes_idx))
+# lvls.append(set.union(*next(bfs_generator)))
+# print("Done! Elapsed time " + str(time.time() - t))
+#
+# # Delete unnecessary rows in adjacencies for memory efficiency
+# todel = list(set(range(num_nodes)) - set.union(lvls[0], lvls[1]))
+# for i in range(len(A)):
+#     csr_zero_rows(A[i], todel)
 
 data = {'A': A,
         'y': y,
