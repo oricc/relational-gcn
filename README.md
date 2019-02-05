@@ -12,18 +12,17 @@ The code for the *link prediction* task in [1] can be found in the following rep
 
 ## Dependencies
 
-Important: keras 2.0 or higher is not supported as it breaks the Theano sparse matrix API. Tested with keras 1.2.1 and Theano 0.9.0, other versions might work as well.
 
-  * Theano (0.9.0)
-  * keras (1.2.1)
+  * Tensorflow (1.12)
+  * keras (2.2.4)
   * pandas
   * rdflib
+  * numpy and scipy
   
-Note: It is possible to use the TensorFlow backend of keras as well. Note that keras 1.2.1 uses the TensorFlow 0.11 API. Using TensorFlow as a backend will limit the maximum allowed size of a sparse matrix and therefore some of the experiments might throw an error.
 
 ## Usage
 
-Important: Switch keras backend to Theano and disable GPU execution (GPU memory is too limited for some of the experiments). GPU speedup for sparse operations is not that essential, so running this model on CPU will still be quite fast.
+Important: Disable GPU execution (GPU memory is too limited for some of the experiments). GPU speedup for sparse operations is not that essential, so running this model on CPU will still be quite fast.
 
 To replicate the experiments from our paper [1], first run (for AIFB):
 
@@ -39,7 +38,6 @@ python train.py -d aifb --bases 0 --hidden 16 --l2norm 0. --testing
 ```
 
 
-Note that Theano performs an expensive compilation step the first time a computational graph is executed. This can take several minutes to complete.
 
 For the MUTAG dataset, run:
 
@@ -64,18 +62,6 @@ python train.py -d am --bases 40 --hidden 10 --l2norm 5e-4 --testing
 
 Note: Results depend on random seed and will vary between re-runs.
 
-## Setting keras backend to Theano
-
-Create a file `~/.keras/keras.json` with the contents:
-
-```
-{
-    "image_dim_ordering": "tf",
-    "epsilon": 1e-07,
-    "floatx": "float32",
-    "backend": "theano"
-}
-```
 
 ## Enforcing CPU execution
 
@@ -93,7 +79,7 @@ CUDA_VISIBLE_DEVICES= python train.py -d aifb --bases 0 --hidden 16 --l2norm 0. 
 
 ## Cite 
 
-Please cite our paper if you use this code in your own work:
+Please cite the paper if you use this code in your own work:
 
 ```
 @article{schlichtkrull2017modeling,

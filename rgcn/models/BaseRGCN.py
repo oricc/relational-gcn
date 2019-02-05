@@ -47,6 +47,10 @@ class RGCNModel:
         self.model = self._build_model()
 
     def train(self):
+        """
+        This function is responsible for the actual training of the model.
+        The canonical training loop is located in the BasicRGCN class.
+        """
         raise NotImplementedError()
 
     def _get_data(self):
