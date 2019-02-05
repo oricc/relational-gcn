@@ -23,8 +23,6 @@ from rgcn.utils import *
 from rgcn.models.BaseRGCN import BasicRGCN
 
 
-# TODO: Try to remove the double relation matrices (i.e. don't have an inverse relation), see the effect
-
 class ASymmetricRGCN(BasicRGCN):
 
     @staticmethod
@@ -36,7 +34,6 @@ class ASymmetricRGCN(BasicRGCN):
         return r_mat_inv.dot(mx).dot(r_mat_inv)  # D^-0.5 * X * D^-0.5
 
     def __asymmetric_normalization(self):
-        # TODO: write transformation functions to the adj mats used by the asymmetric layer  - CHECK
         A = []
         for i in range(0, self.support - 1, 2):
             mx = self.A[i] + sp.eye(self.A[i].shape[0])
@@ -52,7 +49,6 @@ class ASymmetricRGCN(BasicRGCN):
     def _get_data(self):
         self._normalizing_function = self.__asymmetric_normalization
         super()._get_data()
-        # TODO: Add feature building code and extract matrix
 
     def _build_model(self):
         A_in = [InputAdj(sparse=True) for _ in range(self.support)]
@@ -62,10 +58,10 @@ class ASymmetricRGCN(BasicRGCN):
 
         # Define model architecture
         H = AsymmetricGraphConvolution(self.HIDDEN, self.support, num_bases=self.BASES, featureless=self.featureless,
-                                       activation='relu',bias=True,
+                                       activation='relu', bias=True,
                                        W_regularizer=l2(self.L2))([X_in] + A_in)
         H = Dropout(self.DO)(H)
-        Y = AsymmetricGraphConvolution(self.train_labels.shape[1], self.support, num_bases=self.BASES,bias=True,
+        Y = AsymmetricGraphConvolution(self.train_labels.shape[1], self.support, num_bases=self.BASES, bias=True,
                                        activation='softmax')([H] + A_in)
         # H = Dropout(self.DO)(H)
         # Y = Dense(self.train_labels.shape[1], activation='softmax', kernel_regularizer=l2(self.L2))(H)
@@ -115,13 +111,14 @@ class AsymmetricRGCNWithNeighborHistograms(ASymmetricRGCN):
 
         real_labels = list(set(node_labels) - {-1})
 
+        # Get the features for the graph
         NEIGHBOR_FEATURES = {
             "first_neighbor_histogram": FeatureMeta(nth_neighbor_calculator(1, labels_to_consider=real_labels),
                                                     {"fnh", "first_neighbor"}),
             "second_neighbor_histogram": FeatureMeta(nth_neighbor_calculator(2, labels_to_consider=real_labels),
                                                      {"snh", "second_neighbor"}),
         }
-        features_path = os.path.join(os.path.abspath('../features'),self.DATASET)
+        features_path = os.path.join(os.path.abspath('../features'), self.DATASET)
         features = GraphFeatures(gnx, NEIGHBOR_FEATURES, dir_path=features_path)
         features.build(include=set(self.idx_train), should_dump=True)
 

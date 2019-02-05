@@ -70,8 +70,13 @@ class RGCNModel:
         raise NotImplementedError()
 
 
-class BasicRGCN(RGCNModel):
 
+class BasicRGCN(RGCNModel):
+    """
+    This is the base class used for training an RGCN. The class contains the standard data loading and training
+    code that can be used with any model, as well as the argument loading for grids.
+
+    """
     def __init__(self, args):
         # Define parameters
         self.DATASET = args['dataset']
@@ -194,10 +199,3 @@ class BasicRGCN(RGCNModel):
               "loss= {:.4f}".format(test_loss[0]),
               "accuracy= {:.4f}".format(test_acc[0]))
 
-
-class RGCNWithNeighborLabelsAsInput(BasicRGCN):
-    def __init__(self):
-        pass
-
-    def _get_data(self):
-        pass
