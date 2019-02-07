@@ -62,8 +62,13 @@ class GridRGCNModel(BasicRGCN):
             yield config
 
     def train(self):
+        current_dataset = None
         for config in self._generate_config_list():
             self._set_args(config)
+            if config['dataset'] != current_dataset:
+                # Make sure to only load the dataset when it changes
+                current_dataset = config['dataset']
+                self._get_data()
             self.model = self._build_model()
             super().train()
             self._eval_model(config)
@@ -92,9 +97,6 @@ class GridRGCNModel(BasicRGCN):
             'test_loss': test_loss[0],
             'test_acc': test_acc[0]
         })
-        # print("Test set results:",
-        #       "loss= {:.4f}".format(test_loss[0]),
-        #       "accuracy= {:.4f}".format(test_acc[0]))
 
         self._save_to_file(evals)
 

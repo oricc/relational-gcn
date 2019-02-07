@@ -14,6 +14,8 @@ from rgcn.layers.graph import GraphConvolution
 from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
+VERBOSE = False
+
 
 class RGCNModel:
 
@@ -132,7 +134,6 @@ class BasicRGCN(RGCNModel):
 
         self.num_nodes = A[0].shape[0]
         self.support = len(A)
-        print('support =', self.support)
         # Define empty dummy feature matrix (input is ignored as we set featureless=True)
         # In case features are available, define them here and set featureless=False.
         self.X = sp.csr_matrix(A[0].shape)
@@ -186,19 +187,22 @@ class BasicRGCN(RGCNModel):
                 train_val_loss, train_val_acc = evaluate_preds(preds, [self.train_labels, self.validation_labels],
                                                                [self.idx_train, self.idx_val])
 
-                print("Epoch: {:04d}".format(epoch),
-                      "train_loss= {:.4f}".format(train_val_loss[0]),
-                      "train_acc= {:.4f}".format(train_val_acc[0]),
-                      "val_loss= {:.4f}".format(train_val_loss[1]),
-                      "val_acc= {:.4f}".format(train_val_acc[1]),
-                      "time= {:.4f}".format(time.time() - t))
+                if VERBOSE:
+                    print("Epoch: {:04d}".format(epoch),
+                          "train_loss= {:.4f}".format(train_val_loss[0]),
+                          "train_acc= {:.4f}".format(train_val_acc[0]),
+                          "val_loss= {:.4f}".format(train_val_loss[1]),
+                          "val_acc= {:.4f}".format(train_val_acc[1]),
+                          "time= {:.4f}".format(time.time() - t))
 
             else:
-                print("Epoch: {:04d}".format(epoch),
-                      "time= {:.4f}".format(time.time() - t))
+                if VERBOSE:
+                    print("Epoch: {:04d}".format(epoch),
+                          "time= {:.4f}".format(time.time() - t))
 
         # Testing
         test_loss, test_acc = evaluate_preds(preds, [self.test_labels], [self.idx_test])
-        print("Test set results:",
-              "loss= {:.4f}".format(test_loss[0]),
-              "accuracy= {:.4f}".format(test_acc[0]))
+        if VERBOSE:
+            print("Test set results:",
+                  "loss= {:.4f}".format(test_loss[0]),
+                  "accuracy= {:.4f}".format(test_acc[0]))
