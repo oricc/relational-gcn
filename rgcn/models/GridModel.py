@@ -1,10 +1,9 @@
-from rgcn.models.BaseRGCN import BasicRGCN
 import itertools
 import os
 from utils.utils import evaluate_preds
 
 
-class GridRGCNModel(BasicRGCN):
+class GridRunner:
     RESULTS_DIR = 'results'
     """
     This class is an example of how to run grids over multiple configurations.
@@ -13,11 +12,11 @@ class GridRGCNModel(BasicRGCN):
         - The data method is still called only once, saving time
     """
 
-    def __init__(self, result_file_name):
+    def __init__(self, result_file_name, rgcn_model):
         if '.csv' not in result_file_name:
             result_file_name = result_file_name + '.csv'
-        self.file_name = os.path.join(os.path.dirname(os.getcwd()), GridRGCNModel.RESULTS_DIR, result_file_name)
-        super().__init__()
+        self.file_name = os.path.join(os.path.dirname(os.getcwd()), GridRunner.RESULTS_DIR, result_file_name)
+        self.rgcn_model = rgcn_model
 
     def _generate_config_list(self):
         """
@@ -61,27 +60,30 @@ class GridRGCNModel(BasicRGCN):
             }
             yield config
 
-    def train(self):
+    def run(self):
         current_dataset = None
         for config in self._generate_config_list():
-            self._set_args(config)
+            print(config)
+            self.rgcn_model._set_args(config)
             if config['dataset'] != current_dataset:
                 # Make sure to only load the dataset when it changes
                 current_dataset = config['dataset']
-                self._get_data()
-            self.model = self._build_model()
-            super().train()
+                self.rgcn_model._get_data()
+            self.rgcn_model.model = self.rgcn_model._build_model()
+            self.rgcn_model.train()
             self._eval_model(config)
 
     def _eval_model(self, config):
         evals = config.copy()
 
         # Predict on full dataset
-        preds = self.model.predict([self.X] + self.A, batch_size=self.num_nodes)
+        preds = self.rgcn_model.model.predict([self.rgcn_model.X] + self.rgcn_model.A,
+                                              batch_size=self.rgcn_model.num_nodes)
 
         # Train / validation scores
-        train_val_loss, train_val_acc = evaluate_preds(preds, [self.train_labels, self.validation_labels],
-                                                       [self.idx_train, self.idx_val])
+        train_val_loss, train_val_acc = evaluate_preds(preds, [self.rgcn_model.train_labels,
+                                                               self.rgcn_model.validation_labels],
+                                                       [self.rgcn_model.idx_train, self.rgcn_model.idx_val])
         evals.update({
             'train_loss': train_val_loss[0],
             'train_acc': train_val_acc[0],
@@ -92,7 +94,7 @@ class GridRGCNModel(BasicRGCN):
 
         # Testing
 
-        test_loss, test_acc = evaluate_preds(preds, [self.test_labels], [self.idx_test])
+        test_loss, test_acc = evaluate_preds(preds, [self.rgcn_model.test_labels], [self.rgcn_model.idx_test])
         evals.update({
             'test_loss': test_loss[0],
             'test_acc': test_acc[0]
