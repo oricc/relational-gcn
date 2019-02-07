@@ -38,7 +38,7 @@ class GridRunner:
         """
         dataset_options = ['aifb', 'mutag']
         epochs_options = [50]
-        validation_options = [True]
+        validation_options = [False]
         lr_options = [0.01]
         l2_options = [0.001, 0.01, 0.1, 1]
         hidden_options = [8, 16, 32, 64]
