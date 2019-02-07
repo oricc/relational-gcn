@@ -1,14 +1,23 @@
 from rgcn.models.BaseRGCN import BasicRGCN
 import itertools
+import os
+from utils.utils import evaluate_preds
 
 
 class GridRGCNModel(BasicRGCN):
+    RESULTS_DIR = 'results'
     """
     This class is an example of how to run grids over multiple configurations.
         - The train method is overridden so that it changes the args at every iteration
         - The build model method is called at every iteration
         - The data method is still called only once, saving time
     """
+
+    def __init__(self, result_file_name):
+        if '.csv' not in result_file_name:
+            result_file_name = result_file_name + '.csv'
+        self.file_name = os.path.join(os.path.dirname(os.getcwd()), GridRGCNModel.RESULTS_DIR, result_file_name)
+        super().__init__()
 
     def _generate_config_list(self):
         """
@@ -55,5 +64,55 @@ class GridRGCNModel(BasicRGCN):
     def train(self):
         for config in self._generate_config_list():
             self._set_args(config)
-            self._build_model()
+            self.model = self._build_model()
             super().train()
+            self._eval_model(config)
+
+    def _eval_model(self, config):
+        evals = config.copy()
+
+        # Predict on full dataset
+        preds = self.model.predict([self.X] + self.A, batch_size=self.num_nodes)
+
+        # Train / validation scores
+        train_val_loss, train_val_acc = evaluate_preds(preds, [self.train_labels, self.validation_labels],
+                                                       [self.idx_train, self.idx_val])
+        evals.update({
+            'train_loss': train_val_loss[0],
+            'train_acc': train_val_acc[0],
+            'val_loss': train_val_loss[1],
+            'val_acc': train_val_acc[1]
+
+        })
+
+        # Testing
+
+        test_loss, test_acc = evaluate_preds(preds, [self.test_labels], [self.idx_test])
+        evals.update({
+            'test_loss': test_loss[0],
+            'test_acc': test_acc[0]
+        })
+        # print("Test set results:",
+        #       "loss= {:.4f}".format(test_loss[0]),
+        #       "accuracy= {:.4f}".format(test_acc[0]))
+
+        self._save_to_file(evals)
+
+    def _save_to_file(self, evals):
+        if not os.path.exists(self.file_name):
+            # If the file doesn't exist, we need to both create and initialize it
+            self._init_save_file(evals)
+
+        # Save the results
+        with open(self.file_name, 'w') as f:
+            f.write(','.join(evals) + '\n')
+
+    def _init_save_file(self, evals):
+        """
+        This method creates and add a header line for the csv results file.
+        The header is a list of the keys in the evaluation dictionary, which are assumed to stay
+        the same for the duration of the grid.
+        :param evals: the dictionary containing both the configuration and the evaluation results
+        """
+        with open(self.file_name, 'w+') as f:
+            f.write(','.join(evals.keys()) + '\n')
