@@ -1,3 +1,8 @@
+import os
+import sys
+sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('..'))
+
 from __future__ import print_function
 
 from keras.layers import Input, Dropout

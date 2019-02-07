@@ -70,23 +70,17 @@ class RGCNModel:
         raise NotImplementedError()
 
 
-
 class BasicRGCN(RGCNModel):
     """
     This is the base class used for training an RGCN. The class contains the standard data loading and training
     code that can be used with any model, as well as the argument loading for grids.
 
     """
-    def __init__(self, args):
+
+    def __init__(self, args=None):
         # Define parameters
-        self.DATASET = args['dataset']
-        self.NB_EPOCH = args['epochs']
-        self.VALIDATION = args['validation']
-        self.LR = args['learnrate']
-        self.L2 = args['l2norm']
-        self.HIDDEN = args['hidden']
-        self.BASES = args['bases']
-        self.DO = args['dropout']
+        if args:
+            self._set_args(args)
         self.dirname = os.path.dirname(os.path.realpath(sys.argv[0]))
 
         self.train_mask = None
@@ -97,6 +91,16 @@ class BasicRGCN(RGCNModel):
         self.featureless = True
 
         super().__init__()
+
+    def _set_args(self, args):
+        self.DATASET = args['dataset']
+        self.NB_EPOCH = args['epochs']
+        self.VALIDATION = args['validation']
+        self.LR = args['learnrate']
+        self.L2 = args['l2norm']
+        self.HIDDEN = args['hidden']
+        self.BASES = args['bases']
+        self.DO = args['dropout']
 
     def __symmetric_normalization(self):
 
@@ -198,4 +202,3 @@ class BasicRGCN(RGCNModel):
         print("Test set results:",
               "loss= {:.4f}".format(test_loss[0]),
               "accuracy= {:.4f}".format(test_acc[0]))
-
