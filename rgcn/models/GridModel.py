@@ -109,7 +109,7 @@ class GridRunner:
 
         # Save the results
         with open(self.file_name, 'w') as f:
-            f.write(','.join(evals) + '\n')
+            f.write(','.join(evals.values()) + '\n')
 
     def _init_save_file(self, evals):
         """
