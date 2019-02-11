@@ -1,0 +1,3 @@
+[submodule "graph-measures"]
+	path = graph-measures
+	url = git@github.com:oricc/graph-measures.git
