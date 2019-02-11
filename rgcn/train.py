@@ -17,9 +17,8 @@ from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
 from rgcn.models.BaseRGCN import BasicRGCN
-from rgcn.models.ASymmetricRGCN import ASymmetricRGCN, AsymmetricRGCNWithNeighborHistograms
-from rgcn.models.GridModel import GridRunner
-
+from rgcn.models.ASymmetricRGCN import AsymmetricRGCNWithNeighborHistograms
+from rgcn.runners.grid_runner import GridRunner
 import pickle as pkl
 
 import os
@@ -154,15 +153,20 @@ def train_inline():
 
 
 def train_model_object():
-    m = BasicRGCN(args)
+    # m = BasicRGCN(args)
     # m = ASymmetricRGCN(args)
     # m = AsymmetricRGCNWithNeighborHistograms(args)
-    gr = GridRunner('first_grid_without_features', m)
-    gr.run()
+    # gr = GridRunner('first_grid_without_features', m)
+    # gr.run()
 
-    m = AsymmetricRGCNWithNeighborHistograms(args)
+    # m = AsymmetricRGCNWithNeighborHistograms(args)
+    # m.train()
+
+    m = AsymmetricRGCNWithNeighborHistograms()  # Specifies the type for the grid
+    # m.train()
     gr = GridRunner('first_grid_with_features.csv', m)
     gr.run()
+
 
 if __name__ == '__main__':
     train_model_object()

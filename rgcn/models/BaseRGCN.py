@@ -14,12 +14,12 @@ from rgcn.layers.graph import GraphConvolution
 from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
-VERBOSE = False
+VERBOSE = True
 
 
 class RGCNModel:
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # The model object to train
         self.model = None
 
@@ -42,11 +42,12 @@ class RGCNModel:
         # The list of adjacency matrices used as input
         self.A = None
 
-        # Set all the data variables defined above
-        self._get_data()
+        if kwargs.get('build_data_and_model', True):
+            # Set all the data variables defined above
+            self._get_data()
 
-        # Build the model structure
-        self.model = self._build_model()
+            # Build the model structure
+            self.model = self._build_model()
 
     def train(self):
         """
@@ -71,6 +72,16 @@ class RGCNModel:
         """
         raise NotImplementedError()
 
+    def clear(self):
+        del self.model
+        self.model = None
+
+        del self.A
+        self.A = None
+
+        del self.X
+        self.X = None
+
 
 class BasicRGCN(RGCNModel):
     """
@@ -79,7 +90,7 @@ class BasicRGCN(RGCNModel):
 
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, **kwargs):
         # Define parameters
         if args:
             self._set_args(args)
@@ -91,8 +102,8 @@ class BasicRGCN(RGCNModel):
         self._normalizing_function = self.__symmetric_normalization
 
         self.featureless = True
-
-        super().__init__()
+        kwargs['build_data_and_model'] = kwargs.get('build_data_and_model', True) and (args is not None)
+        super().__init__(**kwargs)
 
     def _set_args(self, args):
         self.DATASET = args['dataset']
@@ -150,7 +161,7 @@ class BasicRGCN(RGCNModel):
         # X_in = Input(shape=(X.shape[1],), sparse=True)
 
         # Define model architecture
-        H = GraphConvolution(self.HIDDEN, self.support, num_bases=self.BASES, featureless=True,
+        H = GraphConvolution(self.HIDDEN, self.support, num_bases=self.BASES, featureless=self.featureless,
                              activation='relu',
                              W_regularizer=l2(self.L2))([X_in] + A_in)
         H = Dropout(self.DO)(H)

@@ -2,6 +2,8 @@ import itertools
 import os
 from utils.utils import evaluate_preds
 
+VERBOSE = True
+
 
 class GridRunner:
     RESULTS_DIR = 'results'
@@ -64,13 +66,23 @@ class GridRunner:
         current_dataset = None
         for config in self._generate_config_list():
             print(config)
-            self.rgcn_model._set_args(config)
-            if config['dataset'] != current_dataset:
-                # Make sure to only load the dataset when it changes
-                current_dataset = config['dataset']
-                self.rgcn_model._get_data()
-            self.rgcn_model.model = self.rgcn_model._build_model()
+            # self.rgcn_model.clear()
+            # self.rgcn_model._set_args(config)
+            # if config['dataset'] != current_dataset:
+            #     # Make sure to only load the dataset when it changes
+            #     if VERBOSE:
+            #         print('Getting data')
+            #     current_dataset = config['dataset']
+            #     self.rgcn_model._get_data()
+            # if VERBOSE:
+            #     print('Building Model')
+            # self.rgcn_model.model = self.rgcn_model._build_model()
+            # if VERBOSE:
+            #     print('Training Model')
+            self.rgcn_model = type(self.rgcn_model)(config)
             self.rgcn_model.train()
+            if VERBOSE:
+                print('Evaluating Model')
             self._eval_model(config)
 
     def _eval_model(self, config):
