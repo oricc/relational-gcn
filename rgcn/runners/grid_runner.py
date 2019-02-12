@@ -2,7 +2,7 @@ import itertools
 import os
 from utils.utils import evaluate_preds
 
-VERBOSE = True
+VERBOSE = False
 
 
 class GridRunner:
@@ -120,8 +120,8 @@ class GridRunner:
             self._init_save_file(evals)
 
         # Save the results
-        with open(self.file_name, 'w') as f:
-            f.write(','.join(evals.values()) + '\n')
+        with open(self.file_name, 'a') as f:
+            f.write(','.join([str(z) for z in evals.values()]) + '\n')
 
     def _init_save_file(self, evals):
         """
@@ -131,4 +131,4 @@ class GridRunner:
         :param evals: the dictionary containing both the configuration and the evaluation results
         """
         with open(self.file_name, 'w+') as f:
-            f.write(','.join(evals.keys()) + '\n')
+            f.write(','.join([str(x) for x in evals.keys()]) + '\n')

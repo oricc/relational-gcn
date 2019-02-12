@@ -14,7 +14,7 @@ from rgcn.layers.graph import GraphConvolution
 from rgcn.layers.input_adj import InputAdj
 from rgcn.utils import *
 
-VERBOSE = True
+VERBOSE = False
 
 
 class RGCNModel:
