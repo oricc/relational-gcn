@@ -76,8 +76,8 @@ class ASymmetricRGCN(BasicRGCN):
 
 class AsymmetricRGCNWithNeighborHistograms(BasicRGCN):
 
-    def __init__(self, args=None,**kwargs):
-        super().__init__(args,**kwargs)
+    def __init__(self, args=None, **kwargs):
+        super(AsymmetricRGCNWithNeighborHistograms,self).__init__(args, **kwargs)
         self.featureless = False
 
     @staticmethod

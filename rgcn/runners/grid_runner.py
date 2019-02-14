@@ -1,8 +1,10 @@
 import itertools
 import os
 from utils.utils import evaluate_preds
+from models.BaseRGCN import RGCNModel
+from inspect import isclass
 
-VERBOSE = False
+VERBOSE = True
 
 
 class GridRunner:
@@ -79,7 +81,11 @@ class GridRunner:
             # self.rgcn_model.model = self.rgcn_model._build_model()
             # if VERBOSE:
             #     print('Training Model')
-            self.rgcn_model = type(self.rgcn_model)(config)
+            if isinstance(self.rgcn_model, RGCNModel):
+                self.rgcn_model = type(self.rgcn_model)(original=self.rgcn_model, args=config)
+            elif isclass(self.rgcn_model):  # Allows for giving a class as input and not an instance
+                self.rgcn_model = self.rgcn_model(args=config)
+
             self.rgcn_model.train()
             if VERBOSE:
                 print('Evaluating Model')

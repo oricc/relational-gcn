@@ -6,9 +6,6 @@ For reproduction of the *entity classification* results in our paper [Modeling R
 
 The code for the *link prediction* task in [1] can be found in the following repository: https://github.com/MichSchli/RelationPrediction
 
-## Installation
-
-```python setup.py install```
 
 ## Dependencies
 

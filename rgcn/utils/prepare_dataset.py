@@ -80,5 +80,5 @@ data = {'A': A,
 
 dirname = os.path.dirname(os.path.realpath(sys.argv[0]))
 
-with open(dirname + '/' + DATASET + '.pickle', 'wb') as f:
+with open(dirname + '../data/' + DATASET + '.pickle', 'wb') as f:
     pkl.dump(data, f, pkl.HIGHEST_PROTOCOL)
