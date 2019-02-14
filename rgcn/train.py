@@ -154,17 +154,12 @@ print(args)
 #
 
 def train_model_object():
-    # m = BasicRGCN(args)
-    # m = ASymmetricRGCN(args)
-    # m = AsymmetricRGCNWithNeighborHistograms(args)
+    # m = BasicRGCN
+    # m = ASymmetricRGCN
     # gr = GridRunner('first_grid_without_features', m)
     # gr.run()
 
-    # m = AsymmetricRGCNWithNeighborHistograms(args)
-    # m.train()
-
     m = AsymmetricRGCNWithNeighborHistograms  # Specifies the type for the grid
-    # m.train()
     gr = GridRunner('first_grid_with_features.csv', m)
     gr.run()
 
