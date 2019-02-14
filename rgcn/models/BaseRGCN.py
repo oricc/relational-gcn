@@ -176,7 +176,7 @@ class BasicRGCN(RGCNModel):
         self.support = len(self.A)
         # Define empty dummy feature matrix (input is ignored as we set featureless=True)
         # In case features are available, define them here and set featureless=False.
-        self.X = sp.csr_matrix(self.A[0].shape)
+        self.X = original.X
 
     def _build_model(self):
 
