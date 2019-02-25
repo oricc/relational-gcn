@@ -74,10 +74,10 @@ class ASymmetricRGCN(BasicRGCN):
         return model
 
 
-class AsymmetricRGCNWithNeighborHistograms(ASymmetricRGCN):
+class AsymmetricRGCNWithNeighborHistograms(BasicRGCN):
 
-    def __init__(self, args):
-        super().__init__(args)
+    def __init__(self, args=None, **kwargs):
+        super(AsymmetricRGCNWithNeighborHistograms,self).__init__(args, **kwargs)
         self.featureless = False
 
     @staticmethod

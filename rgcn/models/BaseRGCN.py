@@ -19,7 +19,7 @@ VERBOSE = False
 
 class RGCNModel:
 
-    def __init__(self):
+    def __init__(self, original=None, **kwargs):
         # The model object to train
         self.model = None
 
@@ -42,8 +42,12 @@ class RGCNModel:
         # The list of adjacency matrices used as input
         self.A = None
 
-        # Set all the data variables defined above
-        self._get_data()
+        if not original:
+            # Set all the data variables defined above
+            self._get_data()
+        else:
+            # Copy the data from the original instance
+            self._copy_data_from(original)
 
         # Build the model structure
         self.model = self._build_model()
@@ -63,6 +67,14 @@ class RGCNModel:
         """
         raise NotImplementedError()
 
+    def _copy_data_from(self, original):
+        """
+        This method is essentially used as a copy constructor, used to initialize the data from an
+        instance that is already created
+        :param original: the original instance
+        """
+        raise NotImplementedError()
+
     def _build_model(self):
         """
         This model build the model to train.
@@ -70,6 +82,16 @@ class RGCNModel:
         :return: a model
         """
         raise NotImplementedError()
+
+    def clear(self):
+        del self.model
+        self.model = None
+
+        del self.A
+        self.A = None
+
+        del self.X
+        self.X = None
 
 
 class BasicRGCN(RGCNModel):
@@ -79,7 +101,7 @@ class BasicRGCN(RGCNModel):
 
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, original=None, **kwargs):
         # Define parameters
         if args:
             self._set_args(args)
@@ -91,8 +113,8 @@ class BasicRGCN(RGCNModel):
         self._normalizing_function = self.__symmetric_normalization
 
         self.featureless = True
-
-        super().__init__()
+        kwargs['build_data_and_model'] = kwargs.get('build_data_and_model', True) and (args is not None)
+        super(BasicRGCN,self).__init__(original=original, **kwargs)
 
     def _set_args(self, args):
         self.DATASET = args['dataset']
@@ -142,6 +164,20 @@ class BasicRGCN(RGCNModel):
 
         self._normalizing_function()
 
+    def _copy_data_from(self, original):
+        # Get dataset splits
+        self.train_labels, self.validation_labels, \
+        self.test_labels, self.idx_train, self.idx_val, self.idx_test = \
+            original.train_labels, original.validation_labels, \
+            original.test_labels, original.idx_train, original.idx_val, original.idx_test
+        self.train_mask = original.train_mask
+        self.A = original.A
+        self.num_nodes = self.A[0].shape[0]
+        self.support = len(self.A)
+        # Define empty dummy feature matrix (input is ignored as we set featureless=True)
+        # In case features are available, define them here and set featureless=False.
+        self.X = original.X
+
     def _build_model(self):
 
         A_in = [InputAdj(sparse=True) for _ in range(self.support)]
@@ -150,7 +186,7 @@ class BasicRGCN(RGCNModel):
         # X_in = Input(shape=(X.shape[1],), sparse=True)
 
         # Define model architecture
-        H = GraphConvolution(self.HIDDEN, self.support, num_bases=self.BASES, featureless=True,
+        H = GraphConvolution(self.HIDDEN, self.support, num_bases=self.BASES, featureless=self.featureless,
                              activation='relu',
                              W_regularizer=l2(self.L2))([X_in] + A_in)
         H = Dropout(self.DO)(H)
