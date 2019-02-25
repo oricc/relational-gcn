@@ -155,6 +155,7 @@ def train_inline():
 
 def train_model_object():
     m = BasicRGCN(args)
+    m.train()
     # m = ASymmetricRGCN(args)
     # m = AsymmetricRGCNWithNeighborHistograms(args)
     gr = GridRunner('first_grid_without_features', m)

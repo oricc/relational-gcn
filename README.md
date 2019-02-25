@@ -8,7 +8,7 @@ The code for the *link prediction* task in [1] can be found in the following rep
 
 ## Installation
 
-```python setup.py install```
+Install using conda and pip.
 
 ## Dependencies
 
